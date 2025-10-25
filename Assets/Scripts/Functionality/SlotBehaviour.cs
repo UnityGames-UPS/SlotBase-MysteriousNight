@@ -147,7 +147,12 @@ public class SlotBehaviour : MonoBehaviour
   private double currentBalance = 0;
 
   internal List<int> dynamicLinesIndex = new List<int>();
-
+  private int[,] initialMatrix = new int[,]
+  {
+      {0,0,7,0,0},
+      {2,7,7,7,2},
+      {1,1,7,1,1}
+  };
 
   [SerializeField] private AudioController audioController;
 
@@ -255,19 +260,40 @@ public class SlotBehaviour : MonoBehaviour
 
   }
 
-  internal void shuffleInitialMatrix()
+  // internal void shuffleInitialMatrix()
+  // {
+  //   for (int i = 0; i < Tempimages.Count; i++)
+  //   {
+  //     for (int j = 0; j < 3; j++)
+  //     {
+  //       int randomIndex = UnityEngine.Random.Range(0, myImages.Length);
+  //       Tempimages[i].slotImages[j].sprite = myImages[randomIndex];
+  //     }
+  //   }
+
+  //   // SetWinningMatrix();
+  //   // PlaywinningMatrixAnim();
+  // }
+  internal void InitializeMatrix()
   {
-    for (int i = 0; i < Tempimages.Count; i++)
+    for (int row = 0; row < initialMatrix.GetLength(0); row++)
     {
-      for (int j = 0; j < 3; j++)
+      for (int col = 0; col < initialMatrix.GetLength(1); col++)
       {
-        int randomIndex = UnityEngine.Random.Range(0, myImages.Length);
-        Tempimages[i].slotImages[j].sprite = myImages[randomIndex];
+        int val = initialMatrix[row, col];
+
+        Tempimages[col].slotImages[row].sprite = myImages[val];
+
+        ImageAnimation animScript = Tempimages[col].slotImages[row].GetComponent<ImageAnimation>();
+        if (animScript != null)
+        {
+          PopulateAnimationSprites(animScript, val);
+
+          animScript.StartAnimation();
+          TempList.Add(animScript);
+        }
       }
     }
-
-    // SetWinningMatrix();
-    // PlaywinningMatrixAnim();
   }
   internal void SetWinningMatrix()
   {

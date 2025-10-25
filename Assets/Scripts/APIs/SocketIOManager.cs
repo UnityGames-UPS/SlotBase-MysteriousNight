@@ -535,7 +535,8 @@ public class SocketIOManager : MonoBehaviour
 
   private void PopulateSlotSocket(List<string> slotPop)
   {
-    slotManager.shuffleInitialMatrix();
+    // slotManager.shuffleInitialMatrix();
+    slotManager.InitializeMatrix();
 
     //for (int i = 0; i < slotPop.Count; i++)
     //{
