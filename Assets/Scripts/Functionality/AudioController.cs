@@ -19,10 +19,48 @@ public class AudioController : MonoBehaviour
   [SerializeField] private AudioClip NormalBg_Audio;
   [SerializeField] private AudioClip BonusBg_Audio;
 
+  private readonly Dictionary<AudioSource, bool> preFocusMuteState = new Dictionary<AudioSource, bool>();
+  private bool isForceMuted = false;
+
   private void Start()
   {
     playBgAudio();
     //audioPlayer_button.clip = clips[clips.Length - 1];
+  }
+
+  private AudioSource[] AllSources()
+  {
+    return new AudioSource[] { bg_adudio, audioPlayer_wl, audioPlayer_button, audioPlayer_Spin };
+  }
+
+  // Focus-driven mute. Called from BOTH the JS OnFocusChanged path and OnApplicationFocus below.
+  // The user's setting lives on each source's own mute flag, so capture and restore per source.
+  internal void SetMuteAll(bool forceMute)
+  {
+    if (forceMute == isForceMuted) return;
+    isForceMuted = forceMute;
+
+    foreach (AudioSource source in AllSources())
+    {
+      if (source == null) continue;
+      if (forceMute)
+      {
+        preFocusMuteState[source] = source.mute;
+        source.mute = true;
+      }
+      else
+      {
+        source.mute = preFocusMuteState.TryGetValue(source, out bool prevMuted) ? prevMuted : source.mute;
+      }
+    }
+
+    if (!forceMute) preFocusMuteState.Clear();
+  }
+
+  // Native/editor focus path — calls the SAME method the WebGL OnFocusChanged path calls.
+  private void OnApplicationFocus(bool focus)
+  {
+    SetMuteAll(!focus);
   }
 
   internal void PlayWLAudio(string type)
@@ -134,6 +172,9 @@ public class AudioController : MonoBehaviour
 
   internal void ToggleMute(float value, string type = "all")
   {
+    // An explicit user interaction proves the game has real focus, so it must win immediately over a
+    // stale forced-mute. Restore the pre-blur state first, then apply the user's category change.
+    if (isForceMuted) SetMuteAll(false);
 
     switch (type)
     {

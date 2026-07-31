@@ -104,6 +104,22 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     private Button lastArrRight_Button;
 
+    private void Awake()
+    {
+        // JSFunctCalls is wired on the socket manager; reuse that reference so the listener
+        // targets this GameObject, where OnFocusChanged lives.
+        if (socketIOManager && socketIOManager.JSManager)
+            socketIOManager.JSManager.RegisterVisibilityListener(gameObject.name);
+    }
+
+    public void OnFocusChanged(string value)
+    {
+        bool focused = value == "1";
+        Debug.Log("UNITY FOCUS CHANGED: " + value + " (focused: " + focused + ")");
+        if (audioController) audioController.SetMuteAll(!focused);
+        if (socketIOManager) socketIOManager.HandleFocusChange(focused);
+    }
+
     private void Start()
     {
         if (PaytableExit_Button) PaytableExit_Button.onClick.RemoveAllListeners();
